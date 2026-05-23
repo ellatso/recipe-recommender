@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}烹飪紀錄 — 食在好料{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-history" style="color:var(--green)"></i> 我的烹飪紀錄</h1>
+  <p>你已經做了 {{ records|length }} 次料理</p>
+</div>
+
+{% if records %}
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>食譜</th><th>分類</th><th>菜系</th><th>評分</th><th>烹飪日期</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in records %}
+      <tr>
+        <td><a href="{{ url_for('recipe_detail', recipe_id=r.recipe_id) }}" style="color:var(--accent);text-decoration:none;font-weight:500">{{ r.recipe_name }}</a></td>
+        <td><span class="badge badge-category">{{ r.category_name or '—' }}</span></td>
+        <td><span class="badge badge-cuisine">{{ r.cuisine }}</span></td>
+        <td>{% if r.rating %}{{ '⭐' * r.rating }}{% else %}—{% endif %}</td>
+        <td style="font-size:.85rem;color:var(--text2)">{{ r.cooked_at }}</td>
+        <td><a href="{{ url_for('recipe_detail', recipe_id=r.recipe_id) }}" class="btn btn-outline btn-sm">查看</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="text-center" style="padding:4rem">
+  <div style="font-size:3rem;margin-bottom:1rem;opacity:.3">🍳</div>
+  <p class="text-muted">還沒有烹飪紀錄，去做一道菜吧！</p>
+  <a href="{{ url_for('dice_page') }}" class="btn btn-gold mt-2"><i class="fas fa-dice"></i> 今晚吃什麼？</a>
+</div>
+{% endif %}
+{% endblock %}

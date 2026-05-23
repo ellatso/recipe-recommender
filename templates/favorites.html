@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}我的收藏 — 食在好料{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-heart" style="color:var(--accent)"></i> 我的收藏</h1>
+  <p>你收藏了 {{ recipes|length }} 道食譜</p>
+</div>
+
+{% if recipes %}
+<div class="card-grid">
+  {% for r in recipes %}
+  <div class="card">
+    <div class="card-body">
+      <div class="card-title"><a href="{{ url_for('recipe_detail', recipe_id=r.recipe_id) }}">{{ r.recipe_name }}</a></div>
+      <div class="card-meta mb-1">
+        <span class="badge badge-cuisine">{{ r.cuisine }}</span>
+        {% if r.category_name %}<span class="badge badge-category">{{ r.category_name }}</span>{% endif %}
+      </div>
+      <div class="card-meta">
+        <span><i class="fas fa-clock"></i> {{ r.cooking_time_min }}分</span>
+        <span>{{ '⭐' * r.difficulty }}</span>
+        {% if r.calories %}<span><i class="fas fa-fire-alt"></i> {{ r.calories }} kcal</span>{% endif %}
+      </div>
+      <div style="margin-top:.8rem;font-size:.8rem;color:var(--text2)">
+        <i class="fas fa-bookmark"></i> 收藏於 {{ r.saved_at }}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center" style="padding:4rem">
+  <div style="font-size:3rem;margin-bottom:1rem;opacity:.3">💔</div>
+  <p class="text-muted">還沒有收藏任何食譜</p>
+  <a href="{{ url_for('browse') }}" class="btn btn-primary mt-2"><i class="fas fa-book-open"></i> 去瀏覽食譜</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}🎲 今晚吃什麼？ — 食在好料{% endblock %}
+{% block extra_css %}
+<style>
+.dice-zone{text-align:center;padding:2rem 1rem}
+.dice-icon{font-size:5rem;cursor:pointer;display:inline-block;transition:transform .3s}
+.dice-icon.spin{animation:spin .6s ease-out}
+@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(720deg)}}
+.result-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;max-width:520px;margin:1.5rem auto;text-align:left;display:none}
+.result-card.show{display:block;animation:fadeIn .4s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.filter-row{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap;margin:1.5rem 0}
+.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin:1rem 0}
+.info-item{background:#faf7f2;padding:10px;border-radius:8px;text-align:center}
+.info-item .num{font-size:1.3rem;font-weight:700}
+.ing-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:.5rem}
+.ing-tag{padding:4px 10px;background:#fef6ee;border:1px solid #f0dcc0;border-radius:16px;font-size:.8rem;color:var(--accent)}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dice-zone">
+  <h1 style="font-size:1.8rem;margin-bottom:.5rem">🎲 今晚吃什麼？</h1>
+  <p class="text-muted">選好條件，骰一下就知道！</p>
+
+  <div class="filter-row">
+    <select id="fCuisine" class="form-control" style="width:130px">
+      <option value="">菜系不限</option>
+      {% for c in cuisines %}<option value="{{ c.cuisine }}">{{ c.cuisine }}</option>{% endfor %}
+    </select>
+    <select id="fCategory" class="form-control" style="width:130px">
+      <option value="">分類不限</option>
+      {% for c in categories %}<option value="{{ c.category_name }}">{{ c.category_name }}</option>{% endfor %}
+    </select>
+    <select id="fDiff" class="form-control" style="width:130px">
+      <option value="5">難度不限</option>
+      <option value="3">≤ 3 (簡單)</option>
+      <option value="2">≤ 2 (超簡單)</option>
+      <option value="1">= 1 (零失敗)</option>
+    </select>
+    <select id="fTime" class="form-control" style="width:130px">
+      <option value="999">時間不限</option>
+      <option value="15">≤ 15 分鐘</option>
+      <option value="30">≤ 30 分鐘</option>
+      <option value="60">≤ 60 分鐘</option>
+    </select>
+  </div>
+
+  <div class="dice-icon" id="diceBtn" onclick="rollDice()">🎲</div>
+  <p class="text-muted" style="font-size:.85rem;margin-top:.5rem">點擊骰子，命運揭曉</p>
+
+  <div class="result-card" id="resultCard">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2 id="rName" style="font-size:1.5rem;color:var(--accent)"></h2>
+      <a id="rLink" href="#" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i> 查看食譜</a>
+    </div>
+    <div class="card-meta mt-1">
+      <span class="badge badge-cuisine" id="rCuisine"></span>
+      <span class="badge badge-category" id="rCategory"></span>
+    </div>
+    <div class="info-grid">
+      <div class="info-item"><div class="num" id="rTime">—</div><div class="text-muted" style="font-size:.75rem">分鐘</div></div>
+      <div class="info-item"><div class="num" id="rDiff">—</div><div class="text-muted" style="font-size:.75rem">難度</div></div>
+      <div class="info-item"><div class="num" id="rCal">—</div><div class="text-muted" style="font-size:.75rem">大卡</div></div>
+    </div>
+    <h3 style="font-size:.95rem;margin-top:1rem"><i class="fas fa-carrot"></i> 所需食材</h3>
+    <div class="ing-list" id="rIngs"></div>
+
+    <div id="rSteps" style="margin-top:1rem;display:none">
+      <h3 style="font-size:.95rem"><i class="fas fa-list-ol"></i> 步驟</h3>
+      <ol id="rStepList" style="padding-left:1.2rem;font-size:.9rem;line-height:1.8;margin-top:.5rem"></ol>
+    </div>
+
+    <div style="text-align:center;margin-top:1.5rem">
+      <button class="btn btn-gold" onclick="rollDice()"><i class="fas fa-redo"></i> 再骰一次</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function rollDice(){
+  const icon=document.getElementById('diceBtn');
+  icon.classList.remove('spin');void icon.offsetWidth;icon.classList.add('spin');
+  const params=new URLSearchParams({
+    cuisine:document.getElementById('fCuisine').value,
+    category:document.getElementById('fCategory').value,
+    max_difficulty:document.getElementById('fDiff').value,
+    max_time:document.getElementById('fTime').value
+  });
+  fetch('/random-pick?'+params).then(r=>{
+    if(!r.ok) return r.json().then(d=>{alert(d.error||'找不到符合條件的食譜');throw 0});
+    return r.json()
+  }).then(d=>{
+    document.getElementById('rName').textContent=d.recipe_name;
+    document.getElementById('rLink').href='/recipe/'+d.recipe_id;
+    document.getElementById('rCuisine').textContent=d.cuisine;
+    document.getElementById('rCategory').textContent=d.category||'';
+    document.getElementById('rTime').textContent=d.cooking_time_min;
+    document.getElementById('rDiff').textContent='⭐'.repeat(d.difficulty);
+    document.getElementById('rCal').textContent=d.calories||'—';
+    document.getElementById('rIngs').innerHTML=d.ingredients.map(i=>`<span class="ing-tag">${i}</span>`).join('');
+    const steps=(d.steps_summary||'').split('/').filter(s=>s.trim());
+    const sl=document.getElementById('rStepList');
+    const sd=document.getElementById('rSteps');
+    if(steps.length>0){sl.innerHTML=steps.map(s=>`<li>${s.trim()}</li>`).join('');sd.style.display='block';}
+    else sd.style.display='none';
+    const card=document.getElementById('resultCard');
+    card.classList.remove('show');void card.offsetWidth;card.classList.add('show');
+  }).catch(()=>{});
+}
+</script>
+{% endblock %}

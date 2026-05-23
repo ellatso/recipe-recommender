@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}註冊 — 食在好料{% endblock %}
+{% block content %}
+<div style="max-width:400px;margin:3rem auto">
+  <div class="page-header text-center">
+    <h1>📝 註冊帳號</h1>
+    <p>加入食在好料，收藏喜愛的食譜</p>
+  </div>
+  <div style="background:var(--card);padding:2rem;border-radius:var(--radius);border:1px solid var(--border)">
+    <form method="POST">
+      <div class="form-group">
+        <label>使用者名稱 *</label>
+        <input type="text" name="username" class="form-control" required placeholder="至少3個字元">
+      </div>
+      <div class="form-group">
+        <label>Email *</label>
+        <input type="email" name="email" class="form-control" required placeholder="your@email.com">
+      </div>
+      <div class="form-group">
+        <label>顯示名稱</label>
+        <input type="text" name="display_name" class="form-control" placeholder="你的暱稱（選填）">
+      </div>
+      <div class="form-group">
+        <label>密碼 *</label>
+        <input type="password" name="password" class="form-control" required placeholder="至少6個字元" minlength="6">
+      </div>
+      <button type="submit" class="btn btn-success" style="width:100%">
+        <i class="fas fa-user-plus"></i> 建立帳號
+      </button>
+    </form>
+    <p class="text-center mt-2" style="font-size:0.9rem">
+      已有帳號？<a href="{{ url_for('login') }}" style="color:var(--accent)">前往登入</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

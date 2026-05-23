@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}🍳 食在好料{% endblock %}</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf7f2;
+  --card: #ffffff;
+  --text: #2d2a26;
+  --text2: #6b6560;
+  --accent: #d4513d;
+  --accent2: #e8734a;
+  --green: #4a8c5c;
+  --gold: #c49b2f;
+  --border: #e8e2da;
+  --shadow: 0 2px 12px rgba(45,42,38,0.08);
+  --radius: 12px;
+  --font: 'Noto Sans TC', -apple-system, 'Segoe UI', sans-serif;
+}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* === NAV === */
+.navbar {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.nav-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px;
+}
+.nav-brand {
+  font-size: 1.4rem; font-weight: 700; color: var(--accent);
+  text-decoration: none; display: flex; align-items: center; gap: 8px;
+}
+.nav-brand span { font-size: 1.6rem; }
+.nav-links { display: flex; gap: 4px; align-items: center; }
+.nav-links a {
+  padding: 8px 14px; border-radius: 8px; text-decoration: none;
+  color: var(--text2); font-size: 0.9rem; font-weight: 500;
+  transition: all 0.2s;
+}
+.nav-links a:hover, .nav-links a.active { background: var(--accent); color: #fff; }
+.nav-links .user-badge {
+  background: #f0ebe5; color: var(--text); padding: 6px 12px;
+  border-radius: 20px; font-size: 0.85rem;
+}
+
+/* === LAYOUT === */
+.container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+.page-header {
+  margin-bottom: 2rem; padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border);
+}
+.page-header h1 { font-size: 1.8rem; font-weight: 700; }
+.page-header p { color: var(--text2); margin-top: 4px; }
+
+/* === CARDS === */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.2rem;
+}
+.card {
+  background: var(--card); border-radius: var(--radius);
+  border: 1px solid var(--border); overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.card-body { padding: 1.2rem; }
+.card-title {
+  font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;
+}
+.card-title a { color: var(--text); text-decoration: none; }
+.card-title a:hover { color: var(--accent); }
+.card-meta {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  font-size: 0.8rem; color: var(--text2);
+}
+.badge {
+  display: inline-block; padding: 3px 10px; border-radius: 20px;
+  font-size: 0.75rem; font-weight: 500;
+}
+.badge-cuisine { background: #fef3e2; color: #b8860b; }
+.badge-category { background: #e8f4ec; color: #2d6a4f; }
+.badge-diff { background: #fce4e4; color: #c0392b; }
+.badge-time { background: #e8edf4; color: #34495e; }
+
+/* === DIFFICULTY STARS === */
+.stars { color: var(--gold); letter-spacing: 1px; }
+
+/* === BUTTONS === */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 20px; border-radius: 8px; border: none;
+  font-size: 0.9rem; font-weight: 500; cursor: pointer;
+  text-decoration: none; transition: all 0.2s;
+  font-family: var(--font);
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent2); }
+.btn-secondary { background: #f0ebe5; color: var(--text); }
+.btn-secondary:hover { background: #e5ddd4; }
+.btn-success { background: var(--green); color: #fff; }
+.btn-success:hover { background: #3d7a4f; }
+.btn-outline {
+  background: transparent; border: 1.5px solid var(--border); color: var(--text2);
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+.btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+.btn-lg { padding: 14px 28px; font-size: 1rem; }
+.btn-gold { background: var(--gold); color: #fff; }
+.btn-gold:hover { background: #b08a28; }
+
+/* === FORMS === */
+.form-group { margin-bottom: 1rem; }
+.form-group label {
+  display: block; font-weight: 500; margin-bottom: 4px;
+  font-size: 0.9rem; color: var(--text);
+}
+.form-control {
+  width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+  border-radius: 8px; font-size: 0.95rem; background: var(--card);
+  font-family: var(--font); transition: border-color 0.2s;
+}
+.form-control:focus { outline: none; border-color: var(--accent); }
+select.form-control { cursor: pointer; }
+textarea.form-control { resize: vertical; min-height: 80px; }
+
+/* === FLASH MESSAGES === */
+.flash {
+  padding: 12px 20px; border-radius: 8px; margin-bottom: 1rem;
+  font-size: 0.9rem; display: flex; align-items: center; gap: 8px;
+}
+.flash-success { background: #e8f4ec; color: #2d6a4f; border: 1px solid #c1e0cc; }
+.flash-danger  { background: #fce4e4; color: #c0392b; border: 1px solid #f0c0c0; }
+.flash-warning { background: #fef3e2; color: #b8860b; border: 1px solid #f0dca0; }
+.flash-info    { background: #e8edf4; color: #34495e; border: 1px solid #c0cde0; }
+
+/* === TABLE === */
+.table-container { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td {
+  padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border);
+}
+th { font-weight: 600; font-size: 0.85rem; color: var(--text2); background: #f8f5f0; }
+td { font-size: 0.9rem; }
+tr:hover td { background: #faf7f2; }
+
+/* === PAGINATION === */
+.pagination {
+  display: flex; justify-content: center; gap: 4px;
+  margin-top: 2rem; flex-wrap: wrap;
+}
+.pagination a, .pagination span {
+  padding: 8px 14px; border-radius: 8px; text-decoration: none;
+  font-size: 0.85rem; border: 1px solid var(--border);
+  color: var(--text2); transition: all 0.2s;
+}
+.pagination a:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.pagination .current {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+}
+
+/* === MISC === */
+.text-center { text-align: center; }
+.text-muted { color: var(--text2); }
+.mt-1 { margin-top: 0.5rem; } .mt-2 { margin-top: 1rem; } .mt-3 { margin-top: 1.5rem; }
+.mb-1 { margin-bottom: 0.5rem; } .mb-2 { margin-bottom: 1rem; }
+.flex { display: flex; } .flex-wrap { flex-wrap: wrap; } .gap-1 { gap: 0.5rem; }
+.items-center { align-items: center; } .justify-between { justify-content: space-between; }
+
+/* === FOOTER === */
+footer {
+  text-align: center; padding: 2rem; margin-top: 3rem;
+  border-top: 1px solid var(--border); color: var(--text2);
+  font-size: 0.85rem;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .navbar { padding: 0 1rem; }
+  .nav-links { gap: 0; }
+  .nav-links a { padding: 6px 8px; font-size: 0.8rem; }
+  .container { padding: 1rem; }
+  .card-grid { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 2rem !important; }
+}
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="{{ url_for('index') }}" class="nav-brand">
+      <span>🍳</span> 食在好料
+    </a>
+    <div class="nav-links">
+      <a href="{{ url_for('browse') }}" {% if request.endpoint == 'browse' %}class="active"{% endif %}>
+        <i class="fas fa-book-open"></i> 食譜
+      </a>
+      <a href="{{ url_for('recommend') }}" {% if request.endpoint == 'recommend' %}class="active"{% endif %}>
+        <i class="fas fa-search"></i> 推薦
+      </a>
+      <a href="{{ url_for('dice_page') }}" {% if request.endpoint == 'dice_page' %}class="active"{% endif %}>
+        <i class="fas fa-dice"></i> 今晚吃啥
+      </a>
+      {% if session.get('user_id') %}
+        <a href="{{ url_for('my_favorites') }}"><i class="fas fa-heart"></i> 收藏</a>
+        <a href="{{ url_for('my_history') }}"><i class="fas fa-history"></i> 紀錄</a>
+        <a href="{{ url_for('profile') }}" class="user-badge">
+          <i class="fas fa-user"></i> {{ session.display_name }}
+        </a>
+        <a href="{{ url_for('logout') }}" style="color:var(--accent)">登出</a>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm">登入</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">
+            <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<footer>
+  <p>🍳 食在好料 — 食材搭配與料理推薦系統</p>
+  <p style="margin-top:4px">資料庫管理期末專題 &copy; 2025</p>
+</footer>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

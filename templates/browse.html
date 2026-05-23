@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}瀏覽食譜 — 食在好料{% endblock %}
+{% block content %}
+<div class="page-header flex justify-between items-center" style="flex-wrap:wrap;gap:1rem">
+  <div>
+    <h1><i class="fas fa-book-open"></i> 瀏覽食譜</h1>
+    <p>共 {{ total }} 道食譜</p>
+  </div>
+  <form method="GET" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <input type="text" name="q" class="form-control" style="width:200px" placeholder="搜尋食譜..." value="{{ search }}">
+    <select name="category" class="form-control" style="width:130px">
+      <option value="">所有分類</option>
+      {% for c in categories %}<option value="{{ c.category_name }}" {% if category == c.category_name %}selected{% endif %}>{{ c.category_name }}</option>{% endfor %}
+    </select>
+    <select name="cuisine" class="form-control" style="width:130px">
+      <option value="">所有菜系</option>
+      {% for cs in cuisines %}<option value="{{ cs.cuisine }}" {% if cuisine == cs.cuisine %}selected{% endif %}>{{ cs.cuisine }}</option>{% endfor %}
+    </select>
+    <select name="difficulty" class="form-control" style="width:110px">
+      <option value="0">難度不限</option>
+      {% for d in range(1,6) %}<option value="{{ d }}" {% if difficulty == d %}selected{% endif %}>{{ '⭐' * d }}</option>{% endfor %}
+    </select>
+    <select name="sort" class="form-control" style="width:120px">
+      <option value="name" {% if sort=='name' %}selected{% endif %}>名稱排序</option>
+      <option value="time" {% if sort=='time' %}selected{% endif %}>時間排序</option>
+      <option value="difficulty" {% if sort=='difficulty' %}selected{% endif %}>難度排序</option>
+      <option value="calories" {% if sort=='calories' %}selected{% endif %}>熱量排序</option>
+    </select>
+    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> 搜尋</button>
+  </form>
+</div>
+
+<div class="card-grid">
+  {% for r in recipes %}
+  <div class="card">
+    <div class="card-body">
+      <div class="card-title">
+        <a href="{{ url_for('recipe_detail', recipe_id=r.recipe_id) }}">{{ r.recipe_name }}</a>
+      </div>
+      <div class="card-meta mb-1">
+        <span class="badge badge-cuisine">{{ r.cuisine }}</span>
+        {% if r.category_name %}<span class="badge badge-category">{{ r.category_name }}</span>{% endif %}
+      </div>
+      <div class="card-meta">
+        <span><i class="fas fa-star" style="color:var(--gold)"></i> {{ '⭐' * r.difficulty }}</span>
+        <span><i class="fas fa-clock"></i> {{ r.cooking_time_min }}分</span>
+        {% if r.calories %}<span><i class="fas fa-fire-alt"></i> {{ r.calories }} kcal</span>{% endif %}
+        <span><i class="fas fa-utensils"></i> {{ r.servings }}人份</span>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="text-center text-muted" style="grid-column:1/-1;padding:3rem">
+    <i class="fas fa-search" style="font-size:3rem;margin-bottom:1rem;display:block;opacity:0.3"></i>
+    <p>沒有找到符合條件的食譜</p>
+  </div>
+  {% endfor %}
+</div>
+
+{% if total_pages > 1 %}
+<div class="pagination">
+  {% if page > 1 %}
+    <a href="?page={{ page-1 }}&q={{ search }}&category={{ category }}&cuisine={{ cuisine }}&difficulty={{ difficulty }}&sort={{ sort }}">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+  {% endif %}
+  {% for p in range(1, total_pages+1) %}
+    {% if p == page %}
+      <span class="current">{{ p }}</span>
+    {% elif p <= 3 or p >= total_pages-2 or (p >= page-2 and p <= page+2) %}
+      <a href="?page={{ p }}&q={{ search }}&category={{ category }}&cuisine={{ cuisine }}&difficulty={{ difficulty }}&sort={{ sort }}">{{ p }}</a>
+    {% elif p == 4 or p == total_pages-3 %}
+      <span>...</span>
+    {% endif %}
+  {% endfor %}
+  {% if page < total_pages %}
+    <a href="?page={{ page+1 }}&q={{ search }}&category={{ category }}&cuisine={{ cuisine }}&difficulty={{ difficulty }}&sort={{ sort }}">
+      <i class="fas fa-chevron-right"></i>
+    </a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

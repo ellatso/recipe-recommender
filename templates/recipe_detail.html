@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}{{ recipe.recipe_name }} — 食在好料{% endblock %}
+{% block content %}
+<div style="max-width:800px;margin:0 auto">
+  <a href="{{ url_for('browse') }}" class="btn btn-outline btn-sm mb-2"><i class="fas fa-arrow-left"></i> 返回食譜列表</a>
+
+  <div style="background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:2rem;margin-bottom:1.5rem">
+    <div class="flex justify-between items-center" style="flex-wrap:wrap;gap:1rem">
+      <div>
+        <h1 style="font-size:1.8rem">{{ recipe.recipe_name }}</h1>
+        <div class="card-meta mt-1">
+          <span class="badge badge-cuisine">{{ recipe.cuisine }}</span>
+          {% if recipe.category_name %}<span class="badge badge-category">{{ recipe.category_name }}</span>{% endif %}
+          <span class="badge badge-diff">難度 {{ '⭐' * recipe.difficulty }}</span>
+        </div>
+      </div>
+      {% if session.get('user_id') %}
+      <button id="favBtn" class="btn {% if is_favorited %}btn-primary{% else %}btn-outline{% endif %}"
+              onclick="toggleFav({{ recipe.recipe_id }})">
+        <i class="fas fa-heart"></i> <span>{{ '已收藏' if is_favorited else '收藏' }}</span>
+      </button>
+      {% endif %}
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin:1.5rem 0;text-align:center">
+      <div style="background:#fef6ee;padding:12px;border-radius:8px">
+        <div style="font-size:1.4rem;font-weight:700;color:var(--accent)">{{ recipe.cooking_time_min }}</div>
+        <div class="text-muted" style="font-size:0.8rem">分鐘</div>
+      </div>
+      <div style="background:#e8f4ec;padding:12px;border-radius:8px">
+        <div style="font-size:1.4rem;font-weight:700;color:var(--green)">{{ recipe.servings }}</div>
+        <div class="text-muted" style="font-size:0.8rem">人份</div>
+      </div>
+      <div style="background:#fce4e4;padding:12px;border-radius:8px">
+        <div style="font-size:1.4rem;font-weight:700;color:#c0392b">{{ recipe.difficulty }}</div>
+        <div class="text-muted" style="font-size:0.8rem">難度</div>
+      </div>
+      <div style="background:#e8edf4;padding:12px;border-radius:8px">
+        <div style="font-size:1.4rem;font-weight:700;color:#34495e">{{ recipe.calories or '—' }}</div>
+        <div class="text-muted" style="font-size:0.8rem">大卡</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ingredients -->
+  <div style="background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:1.5rem;margin-bottom:1.5rem">
+    <h2 style="font-size:1.2rem;margin-bottom:1rem"><i class="fas fa-carrot" style="color:var(--accent)"></i> 所需食材（{{ ingredients|length }} 種）</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      {% for ing in ingredients %}
+      <span style="padding:6px 14px;border-radius:20px;font-size:0.85rem;
+        {% if ing.is_optional %}background:#f8f5f0;color:var(--text2);border:1px dashed var(--border){% else %}background:#fef6ee;color:var(--accent);border:1px solid #f0dcc0{% endif %}">
+        {{ ing.ingredient_name }}{% if ing.is_optional %} (選){% endif %}
+      </span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Steps -->
+  {% if recipe.steps_summary %}
+  <div style="background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:1.5rem;margin-bottom:1.5rem">
+    <h2 style="font-size:1.2rem;margin-bottom:1rem"><i class="fas fa-list-ol" style="color:var(--green)"></i> 烹飪步驟</h2>
+    <ol style="padding-left:1.5rem;line-height:2">
+      {% for step in recipe.steps_summary.split('/') %}
+        {% if step.strip() %}
+        <li style="margin-bottom:0.5rem">{{ step.strip() }}</li>
+        {% endif %}
+      {% endfor %}
+    </ol>
+  </div>
+  {% endif %}
+
+  <!-- Log cook -->
+  {% if session.get('user_id') %}
+  <div style="background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:1.5rem;margin-bottom:1.5rem">
+    <h2 style="font-size:1.2rem;margin-bottom:1rem"><i class="fas fa-check-circle" style="color:var(--green)"></i> 記錄烹飪</h2>
+    <form method="POST" action="{{ url_for('log_cook', recipe_id=recipe.recipe_id) }}" style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+      <label>評分：</label>
+      <select name="rating" class="form-control" style="width:120px">
+        <option value="5">⭐⭐⭐⭐⭐</option>
+        <option value="4">⭐⭐⭐⭐</option>
+        <option value="3">⭐⭐⭐</option>
+        <option value="2">⭐⭐</option>
+        <option value="1">⭐</option>
+      </select>
+      <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-utensils"></i> 我做了這道菜！</button>
+    </form>
+  </div>
+  {% endif %}
+
+  <!-- Reviews -->
+  <div style="background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:1.5rem">
+    <h2 style="font-size:1.2rem;margin-bottom:1rem">
+      <i class="fas fa-comments" style="color:var(--gold)"></i> 評論
+      {% if avg_rating > 0 %}
+        <span style="font-size:0.9rem;color:var(--gold);margin-left:8px">
+          ⭐ {{ "%.1f"|format(avg_rating) }} ({{ reviews|length }} 則)
+        </span>
+      {% endif %}
+    </h2>
+
+    {% if session.get('user_id') %}
+    <form method="POST" action="{{ url_for('add_review', recipe_id=recipe.recipe_id) }}" style="margin-bottom:1.5rem">
+      <div class="form-group">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <label style="margin:0">評分</label>
+          <select name="stars" class="form-control" style="width:100px">
+            {% for s in range(5,0,-1) %}<option value="{{ s }}">{{ '⭐' * s }}</option>{% endfor %}
+          </select>
+        </div>
+        <textarea name="content" class="form-control" placeholder="分享你的烹飪心得..." required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i> 送出評論</button>
+    </form>
+    {% else %}
+    <p class="text-muted mb-2"><a href="{{ url_for('login') }}" style="color:var(--accent)">登入</a>後即可留下評論</p>
+    {% endif %}
+
+    {% for rv in reviews %}
+    <div style="padding:1rem 0;border-top:1px solid var(--border)">
+      <div class="flex justify-between items-center">
+        <strong>{{ rv.display_name or rv.username }}</strong>
+        <span class="text-muted" style="font-size:0.8rem">{{ rv.created_at }}</span>
+      </div>
+      <div class="stars">{{ '⭐' * rv.stars }}</div>
+      <p style="margin-top:4px">{{ rv.content }}</p>
+    </div>
+    {% else %}
+    <p class="text-muted text-center">還沒有評論，成為第一個留言的人吧！</p>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+function toggleFav(id) {
+  fetch('/toggle-favorite/' + id, {method:'POST'})
+    .then(r => r.json())
+    .then(d => {
+      const btn = document.getElementById('favBtn');
+      if (d.status === 'added') {
+        btn.className = 'btn btn-primary';
+        btn.querySelector('span').textContent = '已收藏';
+      } else {
+        btn.className = 'btn btn-outline';
+        btn.querySelector('span').textContent = '收藏';
+      }
+    });
+}
+</script>
+{% endblock %}

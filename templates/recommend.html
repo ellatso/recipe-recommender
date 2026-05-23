@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% block title %}食材配對推薦 — 食在好料{% endblock %}
+{% block extra_css %}
+<style>
+.ing-search { position:relative; margin-bottom:1rem; }
+.ing-search input { width:100%; }
+.search-results {
+  position:absolute; top:100%; left:0; right:0; z-index:50;
+  background:var(--card); border:1px solid var(--border); border-radius:8px;
+  max-height:200px; overflow-y:auto; display:none; box-shadow:var(--shadow);
+}
+.search-results div {
+  padding:8px 14px; cursor:pointer; font-size:0.9rem;
+  border-bottom:1px solid #f0ebe5;
+}
+.search-results div:hover { background:#fef6ee; }
+.selected-tags { display:flex; flex-wrap:wrap; gap:6px; margin:1rem 0; }
+.tag {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:6px 12px; background:var(--accent); color:#fff;
+  border-radius:20px; font-size:0.8rem;
+}
+.tag button {
+  background:none; border:none; color:#fff; cursor:pointer;
+  font-size:1rem; line-height:1; opacity:0.8;
+}
+.tag button:hover { opacity:1; }
+.match-bar {
+  height:6px; border-radius:3px; background:#f0ebe5; overflow:hidden; margin-top:6px;
+}
+.match-fill { height:100%; border-radius:3px; transition:width 0.5s; }
+.result-card {
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  padding:1.2rem; margin-bottom:0.8rem; transition:all 0.2s;
+}
+.result-card:hover { box-shadow:var(--shadow); }
+.cat-accordion { margin-bottom:0.5rem; }
+.cat-header {
+  padding:8px 14px; background:#f8f5f0; border-radius:8px; cursor:pointer;
+  font-weight:500; font-size:0.9rem; display:flex; justify-content:space-between;
+  align-items:center;
+}
+.cat-header:hover { background:#f0ebe5; }
+.cat-body {
+  display:none; padding:8px 14px; flex-wrap:wrap; gap:4px;
+}
+.cat-body.open { display:flex; }
+.cat-body label {
+  padding:4px 10px; border-radius:16px; font-size:0.8rem; cursor:pointer;
+  background:#faf7f2; border:1px solid var(--border); transition:all 0.15s;
+}
+.cat-body label:hover { border-color:var(--accent); }
+.cat-body input:checked + span {
+  background:var(--accent); color:#fff;
+}
+.cat-body input { display:none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1><i class="fas fa-search"></i> 食材配對推薦</h1>
+  <p>輸入你手邊有的食材，系統會推薦最匹配的料理</p>
+</div>
+
+<div style="display:grid;grid-template-columns:320px 1fr;gap:1.5rem;align-items:start">
+  <!-- Left: ingredient selection -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem;position:sticky;top:80px">
+    <form method="POST" id="recForm">
+      <h3 style="font-size:1rem;margin-bottom:0.8rem"><i class="fas fa-carrot"></i> 選擇食材</h3>
+
+      <!-- Text search -->
+      <div class="ing-search">
+        <input type="text" id="ingSearch" class="form-control" placeholder="搜尋食材名稱...">
+        <div class="search-results" id="searchResults"></div>
+      </div>
+
+      <!-- Quick text input -->
+      <div class="form-group">
+        <input type="text" name="ingredient_text" class="form-control"
+               placeholder="或直接輸入：雞蛋, 蔥, 醬油" style="font-size:0.85rem">
+      </div>
+
+      <!-- Selected tags -->
+      <div class="selected-tags" id="selectedTags"></div>
+
+      <!-- Category accordions -->
+      <div style="max-height:400px;overflow-y:auto">
+        {% for cat, ings in ing_by_cat.items() %}
+        <div class="cat-accordion">
+          <div class="cat-header" onclick="this.nextElementSibling.classList.toggle('open')">
+            {{ cat }} ({{ ings|length }})
+            <i class="fas fa-chevron-down" style="font-size:0.7rem"></i>
+          </div>
+          <div class="cat-body">
+            {% for ing in ings[:50] %}
+            <label>
+              <input type="checkbox" name="ingredients" value="{{ ing.ingredient_id }}"
+                     onchange="updateTags()">
+              <span>{{ ing.ingredient_name }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <button type="submit" class="btn btn-primary mt-2" style="width:100%">
+        <i class="fas fa-magic"></i> 推薦料理
+      </button>
+    </form>
+  </div>
+
+  <!-- Right: results -->
+  <div>
+    {% if results is not none %}
+      <h3 style="margin-bottom:1rem">
+        <i class="fas fa-utensils" style="color:var(--accent)"></i>
+        找到 {{ results|length }} 道推薦料理
+        {% if selected %}
+          <span class="text-muted" style="font-size:0.85rem">
+            （使用 {{ selected|length }} 種食材匹配）
+          </span>
+        {% endif %}
+      </h3>
+
+      {% for r in results %}
+      <div class="result-card">
+        <div class="flex justify-between items-center">
+          <div>
+            <a href="{{ url_for('recipe_detail', recipe_id=r.recipe_id) }}"
+               style="font-size:1.1rem;font-weight:600;color:var(--text);text-decoration:none">
+              {{ r.recipe_name }}
+            </a>
+            <div class="card-meta mt-1">
+              <span class="badge badge-cuisine">{{ r.cuisine }}</span>
+              <span class="badge badge-category">{{ r.category_name }}</span>
+              <span><i class="fas fa-clock"></i> {{ r.cooking_time_min }}分</span>
+              {% if r.calories %}<span><i class="fas fa-fire-alt"></i> {{ r.calories }} kcal</span>{% endif %}
+            </div>
+          </div>
+          <div style="text-align:right;min-width:80px">
+            <div style="font-size:1.5rem;font-weight:700;color:{% if r.match_pct >= 80 %}var(--green){% elif r.match_pct >= 50 %}var(--gold){% else %}var(--accent){% endif %}">
+              {{ r.match_pct|int }}%
+            </div>
+            <div class="text-muted" style="font-size:0.75rem">{{ r.matched }}/{{ r.total_required }} 食材</div>
+          </div>
+        </div>
+        <div class="match-bar">
+          <div class="match-fill" style="width:{{ r.match_pct }}%;background:{% if r.match_pct >= 80 %}var(--green){% elif r.match_pct >= 50 %}var(--gold){% else %}var(--accent){% endif %}"></div>
+        </div>
+      </div>
+      {% else %}
+      <div class="text-center text-muted" style="padding:3rem">
+        <i class="fas fa-frown" style="font-size:3rem;margin-bottom:1rem;display:block;opacity:0.3"></i>
+        <p>沒有找到匹配的食譜，試試加入更多食材</p>
+      </div>
+      {% endfor %}
+
+    {% else %}
+      <div class="text-center" style="padding:4rem 2rem">
+        <div style="font-size:4rem;margin-bottom:1rem">🥗</div>
+        <h3>選擇你手邊的食材</h3>
+        <p class="text-muted">從左側勾選食材，或直接輸入食材名稱，系統會推薦最適合的料理</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+const searchInput = document.getElementById('ingSearch');
+const searchResults = document.getElementById('searchResults');
+
+searchInput.addEventListener('input', function() {
+  const q = this.value.trim();
+  if (q.length < 1) { searchResults.style.display = 'none'; return; }
+  fetch('/api/search-ingredients?q=' + encodeURIComponent(q))
+    .then(r => r.json())
+    .then(data => {
+      if (data.length === 0) { searchResults.style.display = 'none'; return; }
+      searchResults.innerHTML = data.map(d =>
+        `<div onclick="selectFromSearch(${d.ingredient_id}, '${d.ingredient_name}')">${d.ingredient_name} <span style='color:var(--text2);font-size:0.75rem'>${d.category}</span></div>`
+      ).join('');
+      searchResults.style.display = 'block';
+    });
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.ing-search')) searchResults.style.display = 'none';
+});
+
+function selectFromSearch(id, name) {
+  const form = document.getElementById('recForm');
+  const existing = form.querySelector(`input[value="${id}"]`);
+  if (existing) { existing.checked = true; }
+  else {
+    const inp = document.createElement('input');
+    inp.type = 'checkbox'; inp.name = 'ingredients'; inp.value = id;
+    inp.checked = true; inp.style.display = 'none';
+    form.appendChild(inp);
+  }
+  searchResults.style.display = 'none';
+  searchInput.value = '';
+  updateTags();
+}
+
+function updateTags() {
+  const tags = document.getElementById('selectedTags');
+  const checked = document.querySelectorAll('input[name="ingredients"]:checked');
+  tags.innerHTML = '';
+  checked.forEach(cb => {
+    const label = cb.closest('label');
+    const name = label ? label.querySelector('span').textContent : 'ID:'+cb.value;
+    tags.innerHTML += `<span class="tag">${name}<button type="button" onclick="this.closest('.tag').remove();document.querySelector('input[value=\\'${cb.value}\\']').checked=false">&times;</button></span>`;
+  });
+}
+</script>
+{% endblock %}

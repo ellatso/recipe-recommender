@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}個人資料 — 食在好料{% endblock %}
+{% block content %}
+<div style="max-width:600px;margin:0 auto">
+  <div class="page-header">
+    <h1><i class="fas fa-user-cog"></i> 個人資料</h1>
+  </div>
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem;text-align:center">
+      <div style="font-size:2rem;font-weight:700;color:var(--accent)">{{ fav_count }}</div>
+      <div class="text-muted" style="font-size:.85rem">收藏食譜</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem;text-align:center">
+      <div style="font-size:2rem;font-weight:700;color:var(--green)">{{ cook_count }}</div>
+      <div class="text-muted" style="font-size:.85rem">烹飪紀錄</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem;text-align:center">
+      <div style="font-size:2rem;font-weight:700;color:var(--gold)">{{ review_count }}</div>
+      <div class="text-muted" style="font-size:.85rem">則評論</div>
+    </div>
+  </div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem">
+    <form method="POST">
+      <div class="form-group">
+        <label>帳號</label>
+        <input type="text" class="form-control" value="{{ user.username }}" disabled>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="text" class="form-control" value="{{ user.email }}" disabled>
+      </div>
+      <div class="form-group">
+        <label>顯示名稱</label>
+        <input type="text" name="display_name" class="form-control" value="{{ user.display_name or '' }}">
+      </div>
+      <div class="form-group">
+        <label>不吃的食材（用分號分隔，推薦時會自動排除）</label>
+        <input type="text" name="excluded_ingredients" class="form-control"
+               value="{{ user.excluded_ingredients or '' }}" placeholder="例如：香菜; 苦瓜; 茄子">
+      </div>
+      <div class="form-group">
+        <label>修改密碼（留空則不修改）</label>
+        <input type="password" name="new_password" class="form-control" placeholder="輸入新密碼">
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> 儲存變更</button>
+    </form>
+  </div>
+
+  <div class="text-center mt-3">
+    <p class="text-muted" style="font-size:.85rem">註冊日期：{{ user.created_at }}</p>
+  </div>
+</div>
+{% endblock %}
