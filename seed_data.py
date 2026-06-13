@@ -124,7 +124,7 @@ def seed_from_excel(excel_path):
     ri_df = pd.read_excel(excel_path, sheet_name='recipe_ingredients')
 
     # 2. Insert categories
-    categories = sorted(recipes_df['category'].dropna().unique())
+    categories = sorted(recipes_df['類別'].dropna().unique())
     cat_map = {}
     for cat in categories:
         c.execute("INSERT OR IGNORE INTO categories (category_name) VALUES (?)", (cat,))
@@ -134,8 +134,8 @@ def seed_from_excel(excel_path):
     # 3. Insert ingredients
     ing_map = {}
     for _, row in ingredients_df.iterrows():
-        name = str(row['ingredient_name']).strip()
-        cat = str(row['category']) if pd.notna(row['category']) else '其他'
+        name = str(row['成分名稱']).strip()
+        cat = str(row['類別']) if pd.notna(row['類別']) else '其他'
         c.execute("INSERT OR IGNORE INTO ingredients (ingredient_name, category) VALUES (?,?)",
                   (name, cat))
         c.execute("SELECT ingredient_id FROM ingredients WHERE ingredient_name=?", (name,))
@@ -147,20 +147,20 @@ def seed_from_excel(excel_path):
     recipe_id_map = {}
     for _, row in recipes_df.iterrows():
         old_id = int(row['recipe_id'])
-        cat_id = cat_map.get(row['category'])
+        cat_id = cat_map.get(row['類別'])
         c.execute("""
             INSERT INTO recipes (recipe_name, category_id, cuisine, difficulty,
                                  cooking_time_min, servings, calories, steps_summary)
             VALUES (?,?,?,?,?,?,?,?)
         """, (
-            row['recipe_name'],
+            row['配方名稱'],
             cat_id,
-            row['cuisine'] if pd.notna(row['cuisine']) else '中式家常',
-            int(row['difficulty']) if pd.notna(row['difficulty']) else 3,
-            int(row['cooking_time_min']) if pd.notna(row['cooking_time_min']) else 30,
-            int(row['servings']) if pd.notna(row['servings']) else 2,
-            int(row['calories']) if pd.notna(row['calories']) else None,
-            str(row['steps_summary'])[:1000] if pd.notna(row['steps_summary']) else '',
+            row['美食'] if pd.notna(row['美食']) else '中式家常',
+            int(row['困難']) if pd.notna(row['困難']) else 3,
+            int(row['烹飪時間（分鐘）']) if pd.notna(row['烹飪時間（分鐘）']) else 30,
+            int(row['份量']) if pd.notna(row['份量']) else 2,
+            int(row['卡路里']) if pd.notna(row['卡路里']) else None,
+            str(row['步驟概要'])[:1000] if pd.notna(row['步驟概要']) else '',
         ))
         recipe_id_map[old_id] = c.lastrowid
 
@@ -168,7 +168,7 @@ def seed_from_excel(excel_path):
     for _, row in ri_df.iterrows():
         old_rid = int(row['recipe_id'])
         new_rid = recipe_id_map.get(old_rid)
-        ing_name = str(row['ingredient_name']).strip()
+        ing_name = str(row['成分名稱']).strip()
         ing_id = ing_map.get(ing_name)
 
         if not ing_id:
@@ -180,8 +180,11 @@ def seed_from_excel(excel_path):
                 ing_map[ing_name] = ing_id
 
         if new_rid and ing_id:
+            is_required = row['是必須的']
+            # If '是必須的' is True/1, then is_optional is 0; otherwise 1.
+            is_optional = 0 if is_required else 1
             c.execute("INSERT OR IGNORE INTO recipe_ingredients (recipe_id, ingredient_id, is_optional) VALUES (?,?,?)",
-                      (new_rid, ing_id, 0))
+                      (new_rid, ing_id, is_optional))
 
     # 6. Insert demo users
     from werkzeug.security import generate_password_hash
